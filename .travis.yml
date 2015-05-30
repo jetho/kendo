@@ -27,8 +27,8 @@ script:
  - cabal configure --enable-tests --enable-benchmarks -v2  
  - cabal build   
  - cabal test
- - cabal check
- - cabal sdist  
+#- cabal check
+#- cabal sdist  
 
 # Check that the resulting source distribution can be built & installed.
  - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
