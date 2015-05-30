@@ -17,7 +17,8 @@ cabal-version:       >=1.10
 
 library
   ghc-options:       -Wall -fno-warn-orphans
-  exposed-modules:     Kendo.Ast, Kendo.Eval
+  exposed-modules:     Kendo.Syntax
+                       Kendo.Type
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.6 && <5
