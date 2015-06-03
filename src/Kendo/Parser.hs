@@ -1,16 +1,21 @@
 
 module Kendo.Parser where
 
-import Text.Parsec 
-import Text.Parsec.String
-import Kendo.Lexer
-import Kendo.Syntax
+import           Control.Arrow      ((&&&))
+import           Text.Parsec
+import           Text.Parsec.String
 
+import           Kendo.Lexer
+import           Kendo.Syntax
+
+
+moduleName :: Parser ModuleName
+moduleName = (init &&& last) <$> sepBy1 identifier dot
 
 moduleParser :: Parser Module
 moduleParser = do
     reserved "module"
-    name <- identifier
+    name <- moduleName
     reserved "where"
     return $ Module name []
 

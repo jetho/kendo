@@ -52,4 +52,5 @@ integer    = Tok.integer lexer
 chr        = Tok.charLiteral lexer
 str        = Tok.stringLiteral lexer
 operator   = Tok.operator lexer
+dot        = Tok.dot lexer
 

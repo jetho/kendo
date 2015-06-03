@@ -17,6 +17,7 @@ module Kendo.Syntax (
     , Constr
     , Name
     , Precedence
+    , ModuleName
     ) where
 
 import Kendo.Type
@@ -25,9 +26,10 @@ import Kendo.Type
 type Constr     = String
 type Name       = String
 type Precedence = Integer
+type ModuleName = ([Name], Name)
 
 
-data Module = Module Name [Decl] 
+data Module = Module ModuleName [Decl] 
     deriving (Eq,Show)
 
 data Decl
