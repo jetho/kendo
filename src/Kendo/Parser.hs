@@ -15,8 +15,8 @@ moduleName = (init &&& last) <$> sepBy1 moduleIdent L.dot
 moduleIdent :: Parser String
 moduleIdent = L.lexeme ((:) <$> upper <*> many alphaNum)
 
-moduleParser :: Parser Module
-moduleParser = do
+parseModule :: Parser Module
+parseModule = do
     L.whiteSpace
     L.reserved "module"
     name <- moduleName
@@ -62,8 +62,8 @@ parseStr :: Parser Literal
 parseStr = LitString <$> L.str
 
 parseString :: String -> Either ParseError Module
-parseString s = parse (moduleParser <* eof) "" s
+parseString s = parse (parseModule <* eof) "" s
 
 parseFile :: FilePath -> IO (Either ParseError Module)
-parseFile f = parseFromFile (moduleParser <* eof) f
+parseFile f = parseFromFile (parseModule <* eof) f
 
