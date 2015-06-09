@@ -38,7 +38,7 @@ lexerConfig = haskellStyle
     , Tok.reservedNames   = names
     }
 
-lexer = Tok.makeTokenParser lexerConfig
+lexer      = Tok.makeTokenParser lexerConfig
 
 reserved   = Tok.reserved lexer
 reservedOp = Tok.reservedOp lexer
@@ -53,4 +53,7 @@ chr        = Tok.charLiteral lexer
 str        = Tok.stringLiteral lexer
 operator   = Tok.operator lexer
 dot        = Tok.dot lexer
+whiteSpace = Tok.whiteSpace lexer
+
+lexeme     = Tok.lexeme lexer
 

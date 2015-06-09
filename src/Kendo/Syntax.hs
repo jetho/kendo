@@ -60,7 +60,7 @@ data Expr
     deriving (Eq, Show)
 
 data Literal
-    = LitInt Int
+    = LitInt Integer
     | LitChar Char
     | LitString String
     deriving (Eq, Ord, Show)
