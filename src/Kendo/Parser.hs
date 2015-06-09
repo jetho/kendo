@@ -21,7 +21,36 @@ moduleParser = do
     L.reserved "module"
     name <- moduleName
     L.reserved "where"
-    return $ Module name []
+    decls <- many parseDecl
+    return $ Module name decls
+
+parseDecl :: Parser Decl
+parseDecl = choice
+    [ parseFunDecl
+    , parseTypeDecl
+    , parseDataDecl
+    , parseClassDecl
+    , parseInstDecl
+    , parseFixityDecl
+    ]
+
+parseFunDecl :: Parser Decl
+parseFunDecl = undefined
+
+parseTypeDecl :: Parser Decl
+parseTypeDecl = undefined
+
+parseDataDecl :: Parser Decl
+parseDataDecl = undefined
+
+parseClassDecl :: Parser Decl
+parseClassDecl = undefined
+
+parseInstDecl :: Parser Decl
+parseInstDecl = undefined
+
+parseFixityDecl :: Parser Decl
+parseFixityDecl = undefined
 
 parseInt :: Parser Literal
 parseInt = LitInt <$> L.integer
