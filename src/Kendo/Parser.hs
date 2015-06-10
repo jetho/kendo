@@ -58,6 +58,7 @@ parsePattern = choice
 parseConstrPattern :: Parser Pattern
 parseConstrPattern = undefined
 
+parseExpr :: Parser Expr
 parseExpr = choice
     [ parseVar
     , parseLam
