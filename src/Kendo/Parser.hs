@@ -17,12 +17,8 @@ moduleName = (init &&& last) <$> sepBy1 upperIdent L.dot
 
 parseModule :: Parser Module
 parseModule = do
-    L.whiteSpace
-    L.reserved "module"
-    name <- moduleName
-    L.reserved "where"
-    decls <- many parseDecl
-    return $ Module name decls
+    Module <$> (L.whiteSpace *> L.reserved "module" *> moduleName)
+           <*> (L.reserved "where" *> many parseDecl)
 
 parseDecl :: Parser Decl
 parseDecl = choice
@@ -35,17 +31,16 @@ parseDecl = choice
     ]
 
 parseFunDecl :: Parser Decl
-parseFunDecl = do
-    fName <- L.identifier
-    match <- parseMatch
-    return $ FunDecl $ BindGroup fName [match] Nothing []
+parseFunDecl = FunDecl <$> 
+    (BindGroup <$> L.identifier
+               <*> ((:[]) <$> parseMatch)
+               <*> pure Nothing
+               <*> pure [])
 
 parseMatch :: Parser Match
-parseMatch = do
-    pats <- many parsePattern
-    L.reservedOp "="
-    expr <- parseExpr
-    return $ Match pats expr
+parseMatch = 
+    Match <$> many parsePattern
+          <*> (L.reservedOp "=" *> parseExpr)
 
 parsePattern :: Parser Pattern
 parsePattern = choice
@@ -85,7 +80,10 @@ parseLet :: Parser Expr
 parseLet = undefined
 
 parseIf :: Parser Expr
-parseIf = undefined
+parseIf =  
+    EIf <$> (L.reserved "if"   *> parseExpr)
+        <*> (L.reserved "then" *> parseExpr)
+        <*> (L.reserved "else" *> parseExpr)
 
 parseCase :: Parser Expr
 parseCase = undefined
