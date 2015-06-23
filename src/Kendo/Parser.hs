@@ -9,8 +9,15 @@ import qualified Kendo.Lexer        as L
 import           Kendo.Syntax
 
 
+ident :: Parser Char -> Parser String
+ident start = L.lexeme ((:) <$> start <*> many identLetter)
+  where identLetter = alphaNum <|> oneOf "_'"
+
 upperIdent :: Parser String
-upperIdent = L.lexeme ((:) <$> upper <*> many alphaNum)
+upperIdent = ident upper
+
+identifier :: Parser String
+identifier = ident $ lower <|> oneOf "_" 
 
 moduleName :: Parser ModuleName
 moduleName = (init &&& last) <$> sepBy1 upperIdent L.dot
@@ -23,16 +30,16 @@ parseModule = do
 parseDecl :: Parser Decl
 parseDecl = choice
     [ parseFunDecl
-    , parseTypeDecl
-    , parseDataDecl
-    , parseClassDecl
-    , parseInstDecl
-    , parseFixityDecl
+ --   , parseTypeDecl
+ --   , parseDataDecl
+ --   , parseClassDecl
+ --   , parseInstDecl
+ --   , parseFixityDecl
     ]
 
 parseFunDecl :: Parser Decl
 parseFunDecl = FunDecl <$> 
-    (BindGroup <$> L.identifier
+    (BindGroup <$> identifier
                <*> ((:[]) <$> parseMatch)
                <*> pure Nothing
                <*> pure [])
@@ -45,36 +52,41 @@ parseMatch =
 parsePattern :: Parser Pattern
 parsePattern = choice
     [ PLit <$> parseLiteral
-    , PVar <$> L.identifier
+    , PVar <$> identifier
     , parseConstrPattern
     , L.reservedOp "_" *> pure PWild
     ]
 
 parseConstrPattern :: Parser Pattern
-parseConstrPattern = undefined
+parseConstrPattern = PCon <$> upperIdent <*> many parsePattern
 
 parseExpr :: Parser Expr
 parseExpr = choice
-    [ parseVar
-    , parseLam
-    , parseLit
-    , parseLet
-    , parseIf
-    , parseCase
-    , parseApp
-    , parseAnn
-    , parseDo
-    , parseFail
+    [ try parseIf
+    , try parseLam
+    , try parseLit
+ --   , parseLet
+    , try parseVar
+ --   , parseCase
+ --   , parseApp
+ --   , parseAnn
+ --   , parseDo
+ --   , parseFail
     ]
 
 parseVar :: Parser Expr
-parseVar = EVar <$> L.identifier
+parseVar = EVar <$> identifier
 
 parseLit :: Parser Expr
 parseLit = ELit <$> parseLiteral
 
 parseLam :: Parser Expr
-parseLam = undefined
+parseLam = do
+    L.reservedOp "\\"
+    param <- identifier
+    L.reservedOp "->"
+    expr <- parseExpr 
+    return $ ELam param expr
 
 parseLet :: Parser Expr
 parseLet = undefined
@@ -86,7 +98,7 @@ parseIf =
         <*> (L.reserved "else" *> parseExpr)
 
 parseCase :: Parser Expr
-parseCase = undefined
+parseCase = undefined 
 
 parseApp :: Parser Expr
 parseApp = undefined

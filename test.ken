@@ -1,0 +1,6 @@
+
+module Ab.Kendo.Test  where
+
+test' Luks x b = if a then 1 else a
+
+test2 a = \_ -> "ok"
