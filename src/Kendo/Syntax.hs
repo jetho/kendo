@@ -49,7 +49,7 @@ data ConDecl
 data Expr
     = EApp Expr Expr
     | EVar Name
-    | ELam Name Expr
+    | ELam Pattern Expr
     | ELit Literal
     | ELet Name Expr Expr
     | EIf Expr Expr Expr

@@ -2,6 +2,7 @@
 module Kendo.Parser where
 
 import           Control.Arrow      ((&&&))
+import           Data.Maybe         (fromMaybe)
 import           Text.Parsec       
 import           Text.Parsec.String 
 
@@ -38,12 +39,22 @@ parseDecl = choice
  --   , parseFixityDecl
     ]
 
+parseLocalDecl :: Parser Decl
+parseLocalDecl = choice
+    [ parseFunDecl
+    --, parseTypeDecl
+    ]
+
 parseFunDecl :: Parser Decl
 parseFunDecl = FunDecl <$> 
     (BindGroup <$> identifier
-               <*> ((:[]) <$> parseMatch)
+               <*> (pure <$> parseMatch)
                <*> pure Nothing
-               <*> pure [])
+               <*> parseWhereClause)
+
+parseWhereClause :: Parser [[Decl]]
+parseWhereClause = pure <$> 
+    (fromMaybe [] <$> optionMaybe (L.reserved "where" *> many1 parseLocalDecl))
 
 parseMatch :: Parser Match
 parseMatch = 
@@ -71,17 +82,17 @@ parseLitPattern :: Parser Pattern
 parseLitPattern = PLit <$> parseLiteral
 
 parseExpr :: Parser Expr
-parseExpr = choice $ map try
-    [ parseIf
-    , parseLam
-    , parseLit
- --   , parseLet
-    , parseVar
+parseExpr = choice 
+    [ parseLam
+    , parseIf
+    , parseLet
  --   , parseCase
  --   , parseApp
  --   , parseAnn
  --   , parseDo
  --   , parseFail
+    , parseLit
+    , parseVar
     ]
 
 parseVar :: Parser Expr
@@ -93,13 +104,16 @@ parseLit = ELit <$> parseLiteral
 parseLam :: Parser Expr
 parseLam = do
     L.reservedOp "\\"
-    param <- identifier
+    args <- many parsePattern
     L.reservedOp "->"
     expr <- parseExpr 
-    return $ ELam param expr
+    return $ foldr ELam expr args
 
 parseLet :: Parser Expr
-parseLet = undefined
+parseLet = 
+    ELet <$> (L.reserved "let" *> identifier)
+         <*> (L.reserved "="   *> parseExpr)
+         <*> (L.reserved "in"  *> parseExpr)
 
 parseIf :: Parser Expr
 parseIf =  
