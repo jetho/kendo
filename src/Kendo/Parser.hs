@@ -17,7 +17,8 @@ upperIdent :: Parser String
 upperIdent = ident upper
 
 identifier :: Parser String
-identifier = ident $ lower <|> oneOf "_" 
+identifier = 
+    ident $ lower <|> (oneOf "_" <* notFollowedBy L.whiteSpace)
 
 moduleName :: Parser ModuleName
 moduleName = (init &&& last) <$> sepBy1 upperIdent L.dot
@@ -50,23 +51,32 @@ parseMatch =
           <*> (L.reservedOp "=" *> parseExpr)
 
 parsePattern :: Parser Pattern
-parsePattern = choice
-    [ PLit <$> parseLiteral
-    , PVar <$> identifier
+parsePattern = choice $ map try 
+    [ parseLitPattern
+    , parseVarPattern
     , parseConstrPattern
-    , L.reservedOp "_" *> pure PWild
+    , parseWildcardPattern
     ]
 
 parseConstrPattern :: Parser Pattern
 parseConstrPattern = PCon <$> upperIdent <*> many parsePattern
 
+parseWildcardPattern :: Parser Pattern
+parseWildcardPattern = L.reservedOp "_" *> pure PWild
+
+parseVarPattern :: Parser Pattern
+parseVarPattern = PVar <$> identifier
+
+parseLitPattern :: Parser Pattern
+parseLitPattern = PLit <$> parseLiteral
+
 parseExpr :: Parser Expr
-parseExpr = choice
-    [ try parseIf
-    , try parseLam
-    , try parseLit
+parseExpr = choice $ map try
+    [ parseIf
+    , parseLam
+    , parseLit
  --   , parseLet
-    , try parseVar
+    , parseVar
  --   , parseCase
  --   , parseApp
  --   , parseAnn

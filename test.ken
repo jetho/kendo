@@ -3,4 +3,7 @@ module Ab.Kendo.Test  where
 
 test' Luks x b = if a then 1 else a
 
-test2 a = \_ -> "ok"
+test2 a_ _s_sss_ll' = "ok"
+
+__ __1 =  ___1
+
