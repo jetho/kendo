@@ -83,23 +83,18 @@ parseLitPattern = PLit <$> parseLiteral
 
 parseExpr :: Parser Expr
 parseExpr = choice 
-    [ parseLam
-    , parseIf
+    [ parseIf
     , parseLet
  --   , parseCase
  --   , parseApp
  --   , parseAnn
  --   , parseDo
  --   , parseFail
-    , parseLit
-    , parseVar
+    , parseApp
     ]
 
-parseVar :: Parser Expr
-parseVar = EVar <$> identifier
-
-parseLit :: Parser Expr
-parseLit = ELit <$> parseLiteral
+parseTerm :: Parser Expr
+parseTerm = parseLam <|> parseVar <|> parseLit
 
 parseLam :: Parser Expr
 parseLam = do
@@ -125,7 +120,16 @@ parseCase :: Parser Expr
 parseCase = undefined 
 
 parseApp :: Parser Expr
-parseApp = undefined
+parseApp = decodeApp <$> many1 parseTerm
+  where
+    decodeApp [e] = e
+    decodeApp es  = foldl1 EApp es
+
+parseVar :: Parser Expr
+parseVar = EVar <$> identifier
+
+parseLit :: Parser Expr
+parseLit = ELit <$> parseLiteral
 
 parseAnn :: Parser Expr
 parseAnn = undefined
