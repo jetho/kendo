@@ -3,34 +3,41 @@ module Kendo.Parser where
 
 import           Control.Arrow      ((&&&))
 import           Data.Maybe         (fromMaybe)
-import           Text.Parsec       
-import           Text.Parsec.String 
+import qualified Text.Parsec        as P
+import           Text.Parsec        ((<|>), ParseError)
+import           Text.Parsec.String (Parser, parseFromFile)
 
 import qualified Kendo.Lexer        as L
 import           Kendo.Syntax
 
 
+parens :: Parser a -> Parser a
+parens = P.between (P.char '(') (P.char ')')
+
 ident :: Parser Char -> Parser String
-ident start = L.lexeme ((:) <$> start <*> many identLetter)
-  where identLetter = alphaNum <|> oneOf "_'"
+ident start = L.lexeme ((:) <$> start <*> P.many identLetter)
+  where identLetter = P.alphaNum <|> P.oneOf "_'"
 
 upperIdent :: Parser String
-upperIdent = ident upper
+upperIdent = ident P.upper
 
 identifier :: Parser String
-identifier = 
-    ident $ lower <|> (oneOf "_" <* notFollowedBy L.whiteSpace)
+identifier = do
+    name <- ident $ P.lower <|> (P.oneOf "_" <* P.notFollowedBy L.whiteSpace)
+    if name `elem` L.names
+    then P.unexpected $ "reserved word " ++ show name
+    else return name
 
 moduleName :: Parser ModuleName
-moduleName = (init &&& last) <$> sepBy1 upperIdent L.dot
+moduleName = (init &&& last) <$> P.sepBy1 upperIdent L.dot
 
 parseModule :: Parser Module
 parseModule = do
     Module <$> (L.whiteSpace *> L.reserved "module" *> moduleName)
-           <*> (L.reserved "where" *> many parseDecl)
+           <*> (L.reserved "where" *> P.many parseDecl)
 
 parseDecl :: Parser Decl
-parseDecl = choice
+parseDecl = P.choice
     [ parseFunDecl
  --   , parseTypeDecl
  --   , parseDataDecl
@@ -40,7 +47,7 @@ parseDecl = choice
     ]
 
 parseLocalDecl :: Parser Decl
-parseLocalDecl = choice
+parseLocalDecl = P.choice
     [ parseFunDecl
     --, parseTypeDecl
     ]
@@ -54,15 +61,15 @@ parseFunDecl = FunDecl <$>
 
 parseWhereClause :: Parser [[Decl]]
 parseWhereClause = pure <$> 
-    (fromMaybe [] <$> optionMaybe (L.reserved "where" *> many1 parseLocalDecl))
+    (fromMaybe [] <$> P.optionMaybe (L.reserved "where" *> P.many1 parseLocalDecl))
 
 parseMatch :: Parser Match
 parseMatch = 
-    Match <$> many parsePattern
+    Match <$> P.many parsePattern
           <*> (L.reservedOp "=" *> parseExpr)
 
 parsePattern :: Parser Pattern
-parsePattern = choice $ map try 
+parsePattern = P.choice $ map P.try 
     [ parseLitPattern
     , parseVarPattern
     , parseConstrPattern
@@ -70,7 +77,7 @@ parsePattern = choice $ map try
     ]
 
 parseConstrPattern :: Parser Pattern
-parseConstrPattern = PCon <$> upperIdent <*> many parsePattern
+parseConstrPattern = PCon <$> upperIdent <*> P.many parsePattern
 
 parseWildcardPattern :: Parser Pattern
 parseWildcardPattern = L.reservedOp "_" *> pure PWild
@@ -82,11 +89,11 @@ parseLitPattern :: Parser Pattern
 parseLitPattern = PLit <$> parseLiteral
 
 parseExpr :: Parser Expr
-parseExpr = choice 
-    [ parseIf
-    , parseLet
+parseExpr = P.choice 
+    [ P.try parseIf
+    , P.try parseLet
+    , parseLam
  --   , parseCase
- --   , parseApp
  --   , parseAnn
  --   , parseDo
  --   , parseFail
@@ -94,12 +101,12 @@ parseExpr = choice
     ]
 
 parseTerm :: Parser Expr
-parseTerm = parseLam <|> parseVar <|> parseLit
+parseTerm = parseVar <|> parseLit <|> parens parseExpr
 
 parseLam :: Parser Expr
 parseLam = do
     L.reservedOp "\\"
-    args <- many parsePattern
+    args <- P.many parsePattern
     L.reservedOp "->"
     expr <- parseExpr 
     return $ foldr ELam expr args
@@ -120,13 +127,10 @@ parseCase :: Parser Expr
 parseCase = undefined 
 
 parseApp :: Parser Expr
-parseApp = decodeApp <$> many1 parseTerm
-  where
-    decodeApp [e] = e
-    decodeApp es  = foldl1 EApp es
+parseApp = foldl1 EApp <$> P.many1 parseTerm
 
 parseVar :: Parser Expr
-parseVar = EVar <$> identifier
+parseVar = L.lexeme . P.try $ (EVar <$> identifier)
 
 parseLit :: Parser Expr
 parseLit = ELit <$> parseLiteral
@@ -168,8 +172,8 @@ parseStr :: Parser Literal
 parseStr = LitString <$> L.str
 
 parseString :: String -> Either ParseError Module
-parseString s = parse (parseModule <* eof) "" s
+parseString = P.parse (parseModule <* P.eof) "" 
 
 parseFile :: FilePath -> IO (Either ParseError Module)
-parseFile f = parseFromFile (parseModule <* eof) f
+parseFile = parseFromFile (parseModule <* P.eof) 
 
