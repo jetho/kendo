@@ -13,3 +13,7 @@ test2 a b = if 1 then 2 else 3
         f x = let a = 1 in a
 
 test3 = let a = 1 in a 
+
+
+test4 = case f x of
+    1 -> "ok"

@@ -55,7 +55,7 @@ parseLocalDecl = P.choice
 parseFunDecl :: Parser Decl
 parseFunDecl = FunDecl <$> 
     (BindGroup <$> identifier
-               <*> (pure <$> parseMatch)
+               <*> (pure <$> parseMatch "=")
                <*> pure Nothing
                <*> parseWhereClause)
 
@@ -63,10 +63,10 @@ parseWhereClause :: Parser [[Decl]]
 parseWhereClause = pure <$> 
     (fromMaybe [] <$> P.optionMaybe (L.reserved "where" *> P.many1 parseLocalDecl))
 
-parseMatch :: Parser Match
-parseMatch = 
+parseMatch :: String -> Parser Match
+parseMatch separator = 
     Match <$> P.many parsePattern
-          <*> (L.reservedOp "=" *> parseExpr)
+          <*> (L.reservedOp separator *> parseExpr)
 
 parsePattern :: Parser Pattern
 parsePattern = P.choice $ map P.try 
@@ -92,11 +92,11 @@ parseExpr :: Parser Expr
 parseExpr = P.choice 
     [ P.try parseIf
     , P.try parseLet
-    , parseLam
- --   , parseCase
+    , P.try parseCase
  --   , parseAnn
  --   , parseDo
  --   , parseFail
+    , parseLam
     , parseApp
     ]
 
@@ -124,7 +124,9 @@ parseIf =
         <*> (L.reserved "else" *> parseExpr)
 
 parseCase :: Parser Expr
-parseCase = undefined 
+parseCase = ECase
+    <$> (L.reserved "case" *> parseApp)
+    <*> (L.reserved "of" *> (P.many1 $ parseMatch "->"))
 
 parseApp :: Parser Expr
 parseApp = foldl1 EApp <$> P.many1 parseTerm
