@@ -62,7 +62,9 @@ parsePattern = choice $ map try
     ]
 
 parseConstrPattern :: Parser Pattern
-parseConstrPattern = PCon <$> L.upperIdent <*> many parsePattern
+parseConstrPattern = 
+        L.parens (PCon <$> L.upperIdent <*> many parsePattern)
+    <|> (PCon <$> L.upperIdent <*> pure [])
 
 parseWildcardPattern :: Parser Pattern
 parseWildcardPattern = L.underscore *> pure PWild
