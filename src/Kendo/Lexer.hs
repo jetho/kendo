@@ -1,17 +1,17 @@
 
 module Kendo.Lexer where
 
-import           Control.Monad.Identity
-import           Text.Parsec
-import           Text.Parsec.IndentParsec.Prim
-import qualified Text.Parsec.IndentParsec.Token as I
-import qualified Text.Parsec.Token              as P
+import           Control.Monad.State
+import           Text.Parsec         hiding (State)
+import           Text.Parsec.Indent
+import           Text.Parsec.Pos     (SourcePos)
+import qualified Text.Parsec.Token   as P
 
 
-type Parser a = IndentParsecT String () Identity a
+type Parser a = IndentParser String () a
 
 
-reservedNames = 
+reservedNames =
     [ "true"
     , "false"
     , "data"
@@ -37,7 +37,7 @@ reservedNames =
     , "infix"
     ]
 
-reservedOps = 
+reservedOps =
     [ "::"
     , ".."
     , "="
@@ -51,12 +51,13 @@ reservedOps =
     ]
 
 
+identLetter, identStart, opLetter :: Parser Char
 identLetter = alphaNum <|> oneOf "_'"
 identStart  = letter <|> char '_'
 opLetter    = oneOf ":!#$%&*+./<=>?@\\^|-~"
 
 
-lexerConfig :: P.GenLanguageDef String u (IndentT HaskellLike Identity)
+lexerConfig :: P.GenLanguageDef String () (State SourcePos)
 lexerConfig = P.LanguageDef
     { P.commentStart = ""
     , P.commentEnd = ""
@@ -71,24 +72,24 @@ lexerConfig = P.LanguageDef
     , P.caseSensitive = True
     }
 
-lexer :: I.IndentTokenParser String () Identity
+lexer :: P.GenTokenParser String () (State SourcePos)
 lexer      = P.makeTokenParser lexerConfig
 
-reserved   = I.reserved lexer
-reservedOp = I.reservedOp lexer
-parens     = I.parens lexer
-brackets   = I.brackets lexer
-braces     = I.braces lexer
-commaSep   = I.commaSep lexer
-commaSep1  = I.commaSep1 lexer
-semi       = I.semi lexer
-integer    = I.integer lexer
-chr        = I.charLiteral lexer
-str        = I.stringLiteral lexer
-operator   = I.operator lexer
-dot        = I.dot lexer
-whiteSpace = I.whiteSpace lexer
-lexeme     = I.lexeme lexer
+reserved   = P.reserved lexer
+reservedOp = P.reservedOp lexer
+parens     = P.parens lexer
+brackets   = P.brackets lexer
+braces     = P.braces lexer
+commaSep   = P.commaSep lexer
+commaSep1  = P.commaSep1 lexer
+semi       = P.semi lexer
+integer    = P.integer lexer
+chr        = P.charLiteral lexer
+str        = P.stringLiteral lexer
+operator   = P.operator lexer
+dot        = P.dot lexer
+whiteSpace = P.whiteSpace lexer
+lexeme     = P.lexeme lexer
 
 underscore :: Parser ()
 underscore = reserved "_"

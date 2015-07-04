@@ -1,18 +1,16 @@
 
 module Kendo.Parser where
 
-import           Control.Arrow                       ((&&&))
-import           Control.Monad.Identity
-import           Data.Maybe                          (fromMaybe)
-import           Text.Parsec                         hiding (between, parse)
-import           Text.Parsec.IndentParsec.Combinator
-import           Text.Parsec.IndentParsec.Prim
+import           Control.Arrow      ((&&&))
+import           Data.Maybe         (fromMaybe)
+import           Text.Parsec        hiding (parse)
+import           Text.Parsec.Indent
 
-import qualified Kendo.Lexer                         as L
+import qualified Kendo.Lexer        as L
 import           Kendo.Syntax
 
 
-type Parser a = IndentParsecT String () Identity a
+type Parser a = IndentParser String () a
 
 
 moduleName :: Parser ModuleName
@@ -48,7 +46,7 @@ parseFunDecl = FunDecl <$>
 
 parseWhereClause :: Parser [Decl]
 parseWhereClause =
-    option [] $ L.reserved "where" *> blockOf (many1 parseLocalDecl)
+    option [] $ L.reserved "where" *> many1 parseLocalDecl
 
 parseMatch :: String -> Parser Match
 parseMatch separator =
@@ -161,7 +159,7 @@ parseStr :: Parser Literal
 parseStr = LitString <$> L.str
 
 parse :: String -> Either ParseError Module
-parse = runIdentity . runGIPT (parseModule <* eof) () ""
+parse = runIndent "" . runParserT (parseModule <* eof) () ""
 
 parseFile :: FilePath -> IO (Either ParseError Module)
 parseFile = fmap parse . readFile
