@@ -90,8 +90,8 @@ dot        = I.dot lexer
 whiteSpace = I.whiteSpace lexer
 lexeme     = I.lexeme lexer
 
-underscore :: Parser Char
-underscore = char '_'
+underscore :: Parser ()
+underscore = reserved "_"
 
 ident :: Parser Char -> Parser String
 ident start = lexeme ((:) <$> start <*> many identLetter)

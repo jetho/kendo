@@ -19,4 +19,4 @@ test4 = case f x of
     1 -> "ok"
 
 test x _ = (f x y)
-  where a x _ = g h
+  where a = g h

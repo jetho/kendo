@@ -1,13 +1,14 @@
 
 module Kendo.Parser where
 
-import           Control.Arrow                 ((&&&))
+import           Control.Arrow                       ((&&&))
 import           Control.Monad.Identity
-import           Data.Maybe                    (fromMaybe)
-import           Text.Parsec                   hiding (between, parse)
+import           Data.Maybe                          (fromMaybe)
+import           Text.Parsec                         hiding (between, parse)
+import           Text.Parsec.IndentParsec.Combinator
 import           Text.Parsec.IndentParsec.Prim
 
-import qualified Kendo.Lexer                   as L
+import qualified Kendo.Lexer                         as L
 import           Kendo.Syntax
 
 
@@ -46,7 +47,8 @@ parseFunDecl = FunDecl <$>
                <*> (pure <$> parseWhereClause))
 
 parseWhereClause :: Parser [Decl]
-parseWhereClause = option [] (L.reserved "where" *> many1 parseLocalDecl)
+parseWhereClause =
+    option [] $ L.reserved "where" *> blockOf (many1 parseLocalDecl)
 
 parseMatch :: String -> Parser Match
 parseMatch separator =
