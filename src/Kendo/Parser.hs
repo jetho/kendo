@@ -94,8 +94,10 @@ parseTerm = parseVar <|> parseLit <|> L.parens parseExpr
 parseLam :: Parser Expr
 parseLam = do
     L.reservedOp "\\"
-    args <- many parsePattern
+    args <- many (indented *> parsePattern)
+    indented
     L.reservedOp "->"
+    indented
     expr <- parseExpr
     return $ foldr ELam expr args
 
