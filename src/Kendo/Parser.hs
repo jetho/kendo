@@ -52,7 +52,7 @@ parseWhereClause =
 parseMatch :: String -> Parser Match
 parseMatch separator =
     Match <$> many parsePattern
-          <*> (L.reservedOp separator *> parseExpr)
+          <*> (indented *> L.reservedOp separator *> indented *> parseExpr)
 
 parsePattern :: Parser Pattern
 parsePattern = choice $ map try
@@ -114,7 +114,7 @@ parseIf =
 parseCase :: Parser Expr
 parseCase = ECase
     <$> (L.reserved "case" *> indented *> parseApp)
-    <*> (indented *> L.reserved "of" *> indented *> (block $ parseMatch "->"))
+    <*> (indented *> L.reserved "of" *> indented *> block (parseMatch "->"))
 
 parseApp :: Parser Expr
 parseApp = foldl1 EApp <$> many1 (indented *> parseTerm)
