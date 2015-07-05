@@ -19,7 +19,7 @@ moduleName = (init &&& last) <$> sepBy1 L.upperIdent L.dot
 parseModule :: Parser Module
 parseModule = do
     Module <$> (L.whiteSpace *> L.reserved "module" *> moduleName)
-           <*> (L.reserved "where" *> many parseDecl)
+           <*> (L.reserved "where" *> block parseDecl)
 
 parseDecl :: Parser Decl
 parseDecl = choice
@@ -40,13 +40,14 @@ parseLocalDecl = choice
 parseFunDecl :: Parser Decl
 parseFunDecl = FunDecl <$>
     (BindGroup <$> L.identifier
-               <*> (pure <$> parseMatch "=")
+               <*> (indented *> (pure <$> parseMatch "="))
                <*> pure Nothing
                <*> (pure <$> parseWhereClause))
 
 parseWhereClause :: Parser [Decl]
 parseWhereClause =
-    option [] $ L.reserved "where" *> many1 parseLocalDecl
+    option [] $ indented *> 
+    (withPos $ L.reserved "where" *> indented *> block parseLocalDecl)
 
 parseMatch :: String -> Parser Match
 parseMatch separator =
@@ -63,8 +64,8 @@ parsePattern = choice $ map try
 
 parseConstrPattern :: Parser Pattern
 parseConstrPattern = 
-        L.parens (PCon <$> L.upperIdent <*> many parsePattern)
-    <|> (PCon <$> L.upperIdent <*> pure [])
+    L.parens (PCon <$> L.upperIdent <*> many parsePattern) <|> 
+    (PCon <$> L.upperIdent <*> pure [])
 
 parseWildcardPattern :: Parser Pattern
 parseWildcardPattern = L.underscore *> pure PWild
@@ -116,7 +117,7 @@ parseCase = ECase
     <*> (L.reserved "of" *> (many1 $ parseMatch "->"))
 
 parseApp :: Parser Expr
-parseApp = foldl1 EApp <$> many1 parseTerm
+parseApp = foldl1 EApp <$> many1 (indented >> parseTerm)
 
 parseVar :: Parser Expr
 parseVar = L.lexeme . try $ (EVar <$> L.identifier)
