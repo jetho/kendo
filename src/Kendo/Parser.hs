@@ -18,7 +18,7 @@ moduleName = (init &&& last) <$> sepBy1 L.upperIdent L.dot
 
 parseModule :: Parser Module
 parseModule = do
-    Module <$> (L.whiteSpace *> L.reserved "module" *> moduleName)
+    Module <$> (L.whiteSpace *> L.reserved "module" *> indented *> moduleName)
            <*> (L.reserved "where" *> block parseDecl)
 
 parseDecl :: Parser Decl
@@ -107,9 +107,9 @@ parseLet =
 
 parseIf :: Parser Expr
 parseIf =
-    EIf <$> (L.reserved "if"   *> parseExpr)
-        <*> (L.reserved "then" *> parseExpr)
-        <*> (L.reserved "else" *> parseExpr)
+    EIf <$> (L.reserved "if"   *> indented *> parseExpr)
+        <*> (indented *> L.reserved "then" *> indented *> parseExpr)
+        <*> (indented *> L.reserved "else" *> indented *> parseExpr)
 
 parseCase :: Parser Expr
 parseCase = ECase
