@@ -107,17 +107,17 @@ parseLet =
 
 parseIf :: Parser Expr
 parseIf =
-    EIf <$> (L.reserved "if"   *> indented *> parseExpr)
+    EIf <$> (L.reserved "if" *> indented *> parseExpr)
         <*> (indented *> L.reserved "then" *> indented *> parseExpr)
         <*> (indented *> L.reserved "else" *> indented *> parseExpr)
 
 parseCase :: Parser Expr
 parseCase = ECase
-    <$> (L.reserved "case" *> parseApp)
-    <*> (L.reserved "of" *> (many1 $ parseMatch "->"))
+    <$> (L.reserved "case" *> indented *> parseApp)
+    <*> (indented *> L.reserved "of" *> indented *> (block $ parseMatch "->"))
 
 parseApp :: Parser Expr
-parseApp = foldl1 EApp <$> many1 (indented >> parseTerm)
+parseApp = foldl1 EApp <$> many1 (indented *> parseTerm)
 
 parseVar :: Parser Expr
 parseVar = L.lexeme . try $ (EVar <$> L.identifier)

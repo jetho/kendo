@@ -15,8 +15,13 @@ test2 a b = if 1 then 2 else 3
 test3 = let a = 1 in a 
 
 
-test4 = case f x of
+test4 = 
+  case f x of
     1 -> "ok"
+    2 -> g h 1
+  where
+    f = 1
+    h = 3
 
 test x _ = (f x y)
   where 
