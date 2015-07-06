@@ -51,7 +51,7 @@ data Expr
     | EVar Name
     | ELam Pattern Expr
     | ELit Literal
-    | ELet Name Expr Expr
+    | ELet [Decl] Expr 
     | EIf Expr Expr Expr
     | ECase Expr [Match]
     | EAnn Expr Type

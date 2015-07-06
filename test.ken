@@ -10,9 +10,11 @@ __ __ = \x _ Luks a b -> 1
 test2 a b = if 1 then 2 else 3
   where a = if 1 then a else b
         b = 4
-        f x = let a = 1 in a
+        f x = let a = 1 
+         in a
 
-test3 = let a = 1 in a 
+test3 = let a = 1 
+        in a 
 
 
 test4 = 

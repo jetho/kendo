@@ -103,9 +103,9 @@ parseLam = do
 
 parseLet :: Parser Expr
 parseLet =
-    ELet <$> (L.reserved "let" *> L.identifier)
-         <*> (L.reserved "="   *> parseExpr)
-         <*> (L.reserved "in"  *> parseExpr)
+    ELet <$> (L.reserved "let" *> indented *> 
+             (withPos $ block parseLocalDecl))
+         <*> (indented *> L.reserved "in" *> indented *> parseExpr)
 
 parseIf :: Parser Expr
 parseIf =
