@@ -102,9 +102,9 @@ parseLam = do
     return $ foldr ELam expr args
 
 parseLet :: Parser Expr
-parseLet =
+parseLet = 
     ELet <$> (L.reserved "let" *> indented *> 
-             (withPos $ block parseLocalDecl))
+             (block $ try parseLocalDecl))
          <*> (indented *> L.reserved "in" *> indented *> parseExpr)
 
 parseIf :: Parser Expr
